@@ -1,0 +1,154 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Interactive Webpage</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Apply Inter font family */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Simple keyframe animation for the bounce effect */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(-5%);
+                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+            }
+            50% {
+                transform: translateY(0);
+                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+            }
+        }
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg text-center max-w-lg w-full">
+        <!-- Dynamic Greeting and Time/Date -->
+        <p id="greetingMessage" class="text-xl md:text-2xl font-semibold text-purple-700 mb-2"></p>
+        <p id="currentDateTime" class="text-md text-gray-500 mb-6"></p>
+
+        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4 animate-bounce">
+            Hello, World!
+        </h1>
+        <p class="text-lg text-gray-600 mb-6">
+            Welcome to your interactive webpage!
+        </p>
+
+        <!-- Contact Information Section -->
+        <div class="mt-8 border-t border-gray-200 pt-6">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">Connect with Somnath Panda</h2>
+            <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
+                <a href="tel:+919679835270" class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                    📞 Call Somnath
+                </a>
+                <!-- WhatsApp with Textbox -->
+                <div class="flex flex-col items-center space-y-2 w-full md:w-auto">
+                    <textarea id="whatsappMessageInput" rows="2" class="w-full p-2 border border-gray-300 rounded-lg text-gray-700 focus:ring-blue-500 focus:border-blue-500" placeholder="Type your WhatsApp message..."></textarea>
+                    <button id="whatsappBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 w-full">
+                        💬 WhatsApp Somnath
+                    </button>
+                </div>
+            </div>
+
+            <!-- Page Under Process Message -->
+            <div class="mt-8 p-4 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800 text-center w-full shadow-md">
+                <p class="font-semibold">Page Under Process...</p>
+                <p class="text-sm mt-1">More exciting content coming soon!</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase imports (boilerplate for general app development, not directly used in this version)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Firebase configuration and initialization (will use values provided by the environment if available)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app;
+        let auth;
+        let userId = null; // To store the authenticated user ID
+
+        window.onload = async function() {
+            try {
+                if (Object.keys(firebaseConfig).length > 0) {
+                    app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+
+                    // Listen for authentication state changes
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            console.log("Firebase Auth Ready. User ID:", userId);
+                        } else {
+                            // If no user is authenticated, attempt to sign in anonymously or with a custom token
+                            try {
+                                if (initialAuthToken) {
+                                    await signInWithCustomToken(auth, initialAuthToken);
+                                } else {
+                                    await signInAnonymously(auth);
+                                }
+                                userId = auth.currentUser?.uid || crypto.randomUUID(); // Fallback if anonymous fails
+                                console.log("Signed in anonymously or with custom token. User ID:", userId);
+                            } catch (error) {
+                                console.error("Firebase authentication error:", error);
+                            }
+                        }
+                    });
+                } else {
+                    console.warn("Firebase config not provided. Running without Firebase features.");
+                }
+            } catch (e) {
+                console.error("Failed to initialize Firebase:", e);
+            }
+
+            // --- Time, Date, Greeting ---
+            const greetingMessageElement = document.getElementById('greetingMessage');
+            const currentDateTimeElement = document.getElementById('currentDateTime');
+
+            function updateDateTimeAndGreeting() {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                const formattedDateTime = now.toLocaleDateString('en-US', options);
+                currentDateTimeElement.innerText = formattedDateTime;
+
+                const hour = now.getHours();
+                let greeting;
+                if (hour < 12) {
+                    greeting = "Good Morning!";
+                } else if (hour < 18) {
+                    greeting = "Good Afternoon!";
+                } else {
+                    greeting = "Good Evening!";
+                }
+                greetingMessageElement.innerText = greeting;
+            }
+
+            // Update immediately and then every second
+            updateDateTimeAndGreeting();
+            setInterval(updateDateTimeAndGreeting, 1000);
+
+            // --- WhatsApp with Text Box Feature ---
+            const whatsappMessageInput = document.getElementById('whatsappMessageInput');
+            const whatsappBtn = document.getElementById('whatsappBtn');
+            const phoneNumber = '919679835270'; // Somnath's phone number
+
+            whatsappBtn.addEventListener('click', () => {
+                const message = encodeURIComponent(whatsappMessageInput.value.trim());
+                // Construct the WhatsApp URL with the pre-filled message
+                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+                window.open(whatsappUrl, '_blank'); // Open in a new tab
+            });
+        };
+    </script>
+</body>
+</html>
