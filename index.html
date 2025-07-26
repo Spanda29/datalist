@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Party Ledger Viewer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Party Ledger Viewer</h1>
+
+        <div id="status" class="status-message">Loading data...</div>
+
+        <div class="search-section">
+            <input type="text" id="partySearch" placeholder="Search by Party Name...">
+            <button onclick="searchParty()">Search</button>
+        </div>
+
+        <div id="searchResults" class="results-summary">
+            </div>
+
+        <div id="fullLedger" class="full-ledger-view" style="display: none;">
+            <h2>Full Ledger Details</h2>
+            <div id="ledgerContent">
+                </div>
+            <button onclick="exportLedgerToPdf()">Export to PDF</button>
+            <button onclick="hideFullLedger()">Back to Search</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
