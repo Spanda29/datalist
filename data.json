@@ -1,0 +1,24 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/>async function loadData() {
+  document.getElementById('loading').style.display = 'none';
+
+  // Simulate sample data:
+  accounts = [
+    {
+      "name": "John Doe",
+      "due": 1500,
+      "ledger": [
+        {"date": "2025-06-01", "particulars": "Invoice #101", "debit": 0, "credit": 1500, "balance": 1500},
+        {"date": "2025-06-15", "particulars": "Payment", "debit": 1500, "credit": 0, "balance": 0}
+      ]
+    },
+    {
+      "name": "Jane Smith",
+      "due": 890,
+      "ledger": [
+        {"date": "2025-06-05", "particulars": "Invoice #102", "debit": 0, "credit": 890, "balance": 890}
+      ]
+    }
+  ];
+
+  document.getElementById('last-update').innerText = 'Last Update: Sample data loaded';
+}
