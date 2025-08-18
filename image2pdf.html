@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image to PDF - Sponline</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(120deg, #b2fefa 0%, #efefef 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeInBody 1.2s;
+    }
+    @keyframes fadeInBody {
+      0% {opacity: 0; transform: scale(1.05);}
+      100% {opacity: 1; transform: scale(1);}
+    }
+    .container {
+      padding: 38px 30px;
+      margin-top: 60px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 7px 24px rgba(110,210,215,.16);
+      min-width: 320px;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: slideUp 1s;
+    }
+    @keyframes slideUp {
+      from {transform: translateY(40px); opacity: 0;}
+      to {transform: translateY(0); opacity: 1;}
+    }
+    h1 {
+      color: #10b4c7;
+      margin-bottom: 28px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 8px #e0fcff;
+    }
+    input[type="file"] {
+      background: #f8feff;
+      border: 2px solid #b2fefa;
+      border-radius: 7px;
+      font-size: 17px;
+      padding: 10px;
+      margin-bottom: 22px;
+      cursor: pointer;
+      box-shadow: 0 1px 8px rgba(100,200,255,.12);
+    }
+    button {
+      background: linear-gradient(90deg, #10b4c7 0%, #4dddcd 100%);
+      color: #fff;
+      border: none;
+      padding: 13px 38px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 19px;
+      margin: 10px;
+      transition: background 0.2s;
+      font-weight: 600;
+      box-shadow: 0 2px 14px #76e5e5;
+    }
+    button:hover {
+      background: #007a8a;
+    }
+    #pdfDownloadLink {
+      margin-top: 26px;
+      font-size: 1.15em;
+    }
+    .preview-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 20px;
+      min-height: 28px;
+    }
+    .preview-item {
+      background: #e7fbff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px #4dddcd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 6px;
+      margin-bottom: 7px;
+      width: 110px;
+      animation: fadeInItem .7s;
+    }
+    @keyframes fadeInItem {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    .preview-item img {
+      max-width: 90px;
+      max-height: 70px;
+      border-radius: 5px;
+      object-fit: cover;
+      margin-bottom: 5px;
+      background: #fff;
+      box-shadow: 0 1px 5px #c2fcfc;
+    }
+    .preview-item span {
+      font-size: 12px;
+      color: #10b4c7;
+      word-break: break-all;
+    }
+    .graphic-bar {
+      width: 65px;
+      height: 6px;
+      margin: 0 auto 16px auto;
+      background: linear-gradient(90deg, #4dddcd 0%, #10b4c7 100%);
+      border-radius: 3px;
+      box-shadow: 0 4px 12px #b2fefa;
+    }
+    /* Loader styles */
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      animation: fadeInItem .6s;
+    }
+    .loader svg {
+      width: 56px; height: 56px;
+      animation: rotate 1.2s linear infinite;
+    }
+    @keyframes rotate {
+      100% {transform: rotate(360deg);}
+    }
+    .loader span {
+      margin-top: 10px;
+      color: #10b4c7;
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+
+    /* Styles for the inline links */
+    .inline-links {
+      display: flex;
+      justify-content: center; /* Center horizontally */
+      gap: 20px;
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      color: #2a4d69;
+      margin: 20px 0; /* Optional spacing above and below */
+    }
+    .inline-links a {
+      text-decoration: none;
+      padding: 6px 12px;
+      border: 1px solid #2a4d69;
+      border-radius: 5px;
+      background-color: #f0f4f8;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .inline-links a:hover {
+      background-color: #2a4d69;
+      color: white;
+    }
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Image to PDF Converter</h1>
+    <div class="graphic-bar"></div>
+    <input type="file" id="fileInput" multiple accept="image/*">
+    <div class="preview-list" id="previewList"></div>
+    <button id="convertButton">Convert to PDF</button>
+    <div id="pdfDownloadLink"></div>
+  </div>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const previewList = document.getElementById('previewList');
+    const convertButton = document.getElementById('convertButton');
+    const pdfDownloadLink = document.getElementById('pdfDownloadLink');
+    let loaderDiv = null;
+
+    // Stylish & graphical local preview of images
+    fileInput.addEventListener('change', () => {
+      previewList.innerHTML = '';
+      const files = fileInput.files;
+      for (let i = 0; i < files.length; i++) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const div = document.createElement('div');
+          div.className = 'preview-item';
+          const img = document.createElement('img');
+          img.src = event.target.result;
+          const label = document.createElement('span');
+          label.textContent = files[i].name;
+          div.appendChild(img);
+          div.appendChild(label);
+          previewList.appendChild(div);
+        };
+        reader.readAsDataURL(files[i]);
+      }
+    });
+
+    convertButton.addEventListener('click', async () => {
+      const { jsPDF } = window.jspdf;
+      const files = fileInput.files;
+      if (!files.length) {
+        alert('Select images first!');
+        return;
+      }
+
+      // Show loader animation and message for 3 seconds
+      pdfDownloadLink.innerHTML = '';
+      loaderDiv = document.createElement('div');
+      loaderDiv.className = 'loader';
+      loaderDiv.innerHTML =
+        '<svg viewBox="0 0 50 50">' +
+        '<circle cx="25" cy="25" r="21" stroke="#10b4c7" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="97" stroke-dashoffset="70"></circle>' +
+        '</svg>' +
+        '<span>Converting to PDF...</span>';
+      pdfDownloadLink.appendChild(loaderDiv);
+
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      loaderDiv.remove();
+
+      // Continue conversion after loading
+      const doc = new jsPDF();
+      let promises = [];
+      for (let i = 0; i < files.length; i++) {
+        promises.push(new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            resolve(event.target.result);
+          };
+          reader.readAsDataURL(files[i]);
+        }));
+      }
+      Promise.all(promises).then((images) => {
+        images.forEach((imgData, idx) => {
+         
+
+          // Insert images, plain PDF for printing
+          doc.addImage(imgData, 'JPEG', 15, 30, 180, 0);
+          if (idx < images.length - 1) doc.addPage();
+        });
+        pdfDownloadLink.innerHTML = '';
+        const pdfUrl = doc.output('bloburl');
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        a.download = 'sponline_converted.pdf';
+        a.textContent = 'Download PDF (sponline_converted.pdf)';
+        pdfDownloadLink.appendChild(a);
+      });
+    });
+  </script>
+  <div class="inline-links">
+    <a href="sponlinehome.html">Back Home</a>
+    <a href="sponlinehome.html">Go to BACK</a>
+  </div>
+ 
+</body>
+</html>
